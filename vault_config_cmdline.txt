@@ -1,0 +1,30 @@
+export VAULT_ADDR=http://0.0.0.0:8200
+
+command to initialize vault----------
+vault operator init >> /vault/init.file
+
+command to unseal vault-------------
+egrep -m3 '^Unseal Key' /vault/init.file | cut -f2- -d: | tr -d ' ' | while read key; do vault operator unseal ${key}; done
+
+command to unseal vault-------------
+egrep -m3 '^Initial Root Token' /vault/init.file | cut -f2- -d: | tr -d ' ' | while read key; do vault login ${key}; done
+
+command to enable userpass vault-------------
+vault auth enable userpass
+
+command to enable secret engine vault-------------
+vault secrets enable vin
+
+command to enable policy vault---------------
+vault policy write "mypolicy" -<<EOF
+path "vin/*" {
+  capabilities = ["create", "read", "update", "delete", "list"]
+}
+EOF
+
+command to put secret in vault vault---------------
+vault kv put vin/secret foo=world
+
+
+command to create user in vault---------------
+vault write auth/userpass/users/vin password=pass policies=mypolicy
